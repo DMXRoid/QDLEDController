@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+option go_package = "github.com/DMXRoid/QDLEDController/grpc/led_controller/v2";
+enum WifiMode {
+	WIFI_MODE_UNDEFINED = 0;
+	WIFI_MODE_STATION = 1;
+	WIFI_MODE_SOFT_AP = 2;
+	WIFI_MODE_DUAL = 3;
+}
+
+enum ColorMode {
+	COLOR_MODE_UNDEFINED = 0;
+	COLOR_MODE_STATIC = 1;
+	COLOR_MODE_STEP = 2;
+	COLOR_MODE_FADE = 3;
+	COLOR_MODE_REVERSING_STEP = 4;
+}
+
+message RequestMetadata {
+	string a = 1;
+}
+
+message ResponseMetadata {
+	int32 code = 1;
+	string message = 2;
+}
+
+message GetLEDsRequest {
+	RequestMetadata metadata = 1;
+	string filter = 2;
+}
+
+message GetLEDsResponse {
+	ResponseMetadata metadata = 1;
+	repeated LED leds = 2;
+}
+
+message UpdateLEDsRequest {
+	RequestMetadata metadata = 1;
+	repeated LED leds = 2;
+}
+
+message UpdateLEDsResponse {
+	ResponseMetadata metadata = 1;
+}
+
+
+service LEDController {
+	rpc GetLEDs(GetLEDsRequest) returns (GetLEDsResponse) {}
+	rpc UpdateLEDs(UpdateLEDsRequest) returns (UpdateLEDsResponse) {}
+}
+	
+message LED {
+	ColorConfig color = 1;
+	LightConfig light = 2;
+	WifiConfig wifi = 3;
+	int32 data_pin = 4;
+	string dns_name = 5;
+	string friendly_name = 6;
+	string ip_address = 7;
+	string mac_address = 8;
+}
+
+message ColorConfig {
+	ColorMode mode = 1;
+	int32 fade_delay = 2;
+	int32 step_delay = 3;
+	bool is_gradient = 4;
+	repeated string colors = 5;
+}
+
+message WifiConfig {
+	WifiMode mode = 1;
+	string ssid = 2;
+	string password = 3;
+	string pk = 4;
+}
+
+message LightConfig {
+	int32 count = 1;
+	int32 start_time = 2;
+	int32 end_time = 3;
+	bool is_enabled = 4;
+	int32 brightness = 5;
+}
