@@ -1,19 +1,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/hashicorp/mdns"
+	"github.com/DMXRoid/QDLEDController/v2/discovery"
+	"github.com/DMXRoid/QDLEDController/v2/led"
+	"github.com/DMXRoid/QDLEDController/v2/service"
 )
 
-func main() {
-	entriesCh := make(chan *mdns.ServiceEntry, 4)
-	go func() {
-		for entry := range entriesCh {
-			fmt.Printf("Got new entry: %v\n", entry)
-		}
-	}()
+var wait chan bool
 
-	// Start the lookup
-	mdns.Lookup("_http._tcp", entriesCh)
-	close(entriesCh)
+func main() {
+	led.Init()
+	discovery.Init()
+	service.Init()
+	<-wait
+
 }

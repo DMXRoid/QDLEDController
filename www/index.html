@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<title>QDLEDController</title>
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+		<link href="styles.css" rel="stylesheet">
+
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js"></script>
+		<script src="site-scripts.js"></script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	</head>
+	<body>
+		<div class="container-xxl" id="main-container">
+			<div class="row"><div class="col"><h1>QDLEDController</h1></div></div>
+			<div class="row" class="" id="light-container"></div>
+
+
+		</div>
+		<div style="display: none;" id="templates">
+			<div class="color-input-display">
+				<div class="container">
+					<div class="row">
+						<div class="col-9">
+							<input type="text" name="colors[]" class="color-input" value=""/>
+						</div>
+						<div class="col-3 align-items-right">
+							
+							<a href="#" class="btn btn-danger color-remove">-</a>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="light-display shadow rounded col-2">
+				<div class="container">
+					<div class="row colors position-relative">
+						<div class="light-label bg-white bg-opacity-75 text-center align-items-center z-3 position-absolute top-50 start-50 translate-middle">
+							<a href="#" class="edit-button">
+								<span class="friendly-name"></span>
+								<br>
+								(<span class="ip-address"></span>)
+							</a>
+						</div>
+					</div>
+					<div class="modal edit" tabindex="-1" > 
+						<form>
+						<div class="modal-dialog modal-dialog-centered">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title">
+										<span class="friendly-name"></span>
+										(<span class="ip-address"></span>)
+									</h5>
+									<button type="button" class="btn-close edit-close-button"></button>
+								</div>
+								<div class="modal-body">
+									
+										<div class="container-fluid">
+											<div class="row">
+												
+												<div class="col-4">
+													<label class="form-label">Friendly Name</label>
+													<input type="text" class="form-control friendlyName" name="friendlyName"/>
+												</div>
+												<div class="col-4">
+													<label class="form-label">mDNS Name</label>
+													<input type="text" class="form-control mdnsName" name="mdnsName"/>
+												</div>
+												<div class="col-4">
+													<label class="form-label">Fade Delay</label>
+													<input type="text" class="form-control fadeDelay" name="fadeDelay"/>
+												</div>
+												<div class="col-4">
+													<label class="form-label">Step Delay</label>
+													<input type="text" class="form-control stepDelay" name="stepDelay"/>
+												</div>
+												<div class="col-4">
+													<label class="form-label">Mode</label>
+													<select name="mode" class="form-select mode">
+														<option value="COLOR_MODE_STATIC">Static</option>
+														<option value="COLOR_MODE_STEP">Step</option>
+														<option value="COLOR_MODE_FADE">Fade</option>
+														<option value="COLOR_MODE_REVERSING_STEP">Reverse</option>
+													</select>
+												</div>
+												<div class="col-4">
+													<label class="form-label">Count</label>
+													<input type="text" class="form-control count" name="count"/>
+												</div>
+												<div class="col-4">
+													<label class="form-label">Brightness</label>
+													<input type="text" class="form-control brightness" name="brightness"/>
+												</div>
+												<div class="col-4">
+													<div class="form-check">
+														<label class="form-check-label">Gradient</label>
+														<input type="checkbox" value="true" class="form-check-input isGradient" name="isGradient"/>
+													</div>
+													<div class="form-check">
+														<label class="form-check-label">Enabled</label>
+														<input type="checkbox" value="true" class="form-check-input isEnabled" name="isEnabled"/>
+													</div>
+													
+												</div>
+											</div>
+											<div class="row">
+												<div class="col color-editor">
+													<h1>Colors <a href="#" class="btn btn-primary color-add">+</a></h1>
+
+												</div>
+											</div>
+										</div>
+						
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary edit-close-button">Close</button>
+									<button type="button" class="btn btn-primary update-light">Save</button>
+								</div>
+							</div>
+						</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

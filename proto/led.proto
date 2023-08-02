@@ -1,6 +1,9 @@
 syntax = "proto3";
 
 option go_package = "github.com/DMXRoid/QDLEDController/grpc/led_controller/v2";
+
+import "google/api/annotations.proto";
+
 enum WifiMode {
 	WIFI_MODE_UNDEFINED = 0;
 	WIFI_MODE_STATION = 1;
@@ -9,11 +12,10 @@ enum WifiMode {
 }
 
 enum ColorMode {
-	COLOR_MODE_UNDEFINED = 0;
-	COLOR_MODE_STATIC = 1;
-	COLOR_MODE_STEP = 2;
-	COLOR_MODE_FADE = 3;
-	COLOR_MODE_REVERSING_STEP = 4;
+	COLOR_MODE_STATIC = 0;
+	COLOR_MODE_STEP = 1;
+	COLOR_MODE_FADE = 2;
+	COLOR_MODE_REVERSING_STEP = 3;
 }
 
 message RequestMetadata {
@@ -46,16 +48,26 @@ message UpdateLEDsResponse {
 
 
 service LEDController {
-	rpc GetLEDs(GetLEDsRequest) returns (GetLEDsResponse) {}
-	rpc UpdateLEDs(UpdateLEDsRequest) returns (UpdateLEDsResponse) {}
+	rpc GetLEDs(GetLEDsRequest) returns (GetLEDsResponse) {
+		option (google.api.http) = {
+			post: "/get-leds"
+			body: "*"
+		};
+	}
+	rpc UpdateLEDs(UpdateLEDsRequest) returns (UpdateLEDsResponse) {
+		option (google.api.http) = {
+			post: "/update-leds"
+			body: "*"
+		};
+	}
 }
 	
 message LED {
 	ColorConfig color = 1;
-	LightConfig light = 2;
+	LightConfig lights = 2;
 	WifiConfig wifi = 3;
 	int32 data_pin = 4;
-	string dns_name = 5;
+	string mdns_name = 5;
 	string friendly_name = 6;
 	string ip_address = 7;
 	string mac_address = 8;

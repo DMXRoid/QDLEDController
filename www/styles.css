@@ -1,0 +1,13 @@
+body { 
+	background-color: #fff;
+	
+}
+
+.colors {
+	min-height: 100px;
+}
+
+
+.light-display {  }
+.light-display .light-label {   }
+.edit-button { display: block; width: 100%; text-decoration: none; color: #000; min-height: 70px;}

@@ -1,0 +1,209 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "proto/led.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "LEDController"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "ColorConfig": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/ColorMode"
+        },
+        "fadeDelay": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stepDelay": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isGradient": {
+          "type": "boolean"
+        },
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ColorMode": {
+      "type": "string",
+      "enum": [
+        "COLOR_MODE_UNDEFINED",
+        "COLOR_MODE_STATIC",
+        "COLOR_MODE_STEP",
+        "COLOR_MODE_FADE",
+        "COLOR_MODE_REVERSING_STEP"
+      ],
+      "default": "COLOR_MODE_UNDEFINED"
+    },
+    "GetLEDsResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/ResponseMetadata"
+        },
+        "leds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/LED"
+          }
+        }
+      }
+    },
+    "LED": {
+      "type": "object",
+      "properties": {
+        "color": {
+          "$ref": "#/definitions/ColorConfig"
+        },
+        "lights": {
+          "$ref": "#/definitions/LightConfig"
+        },
+        "wifi": {
+          "$ref": "#/definitions/WifiConfig"
+        },
+        "dataPin": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mdnsName": {
+          "type": "string"
+        },
+        "friendlyName": {
+          "type": "string"
+        },
+        "ipAddress": {
+          "type": "string"
+        },
+        "macAddress": {
+          "type": "string"
+        }
+      }
+    },
+    "LightConfig": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "startTime": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "endTime": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "isEnabled": {
+          "type": "boolean"
+        },
+        "brightness": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "RequestMetadata": {
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string"
+        }
+      }
+    },
+    "ResponseMetadata": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "UpdateLEDsResponse": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "$ref": "#/definitions/ResponseMetadata"
+        }
+      }
+    },
+    "WifiConfig": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/WifiMode"
+        },
+        "ssid": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "pk": {
+          "type": "string"
+        }
+      }
+    },
+    "WifiMode": {
+      "type": "string",
+      "enum": [
+        "WIFI_MODE_UNDEFINED",
+        "WIFI_MODE_STATION",
+        "WIFI_MODE_SOFT_AP",
+        "WIFI_MODE_DUAL"
+      ],
+      "default": "WIFI_MODE_UNDEFINED"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}
