@@ -8,22 +8,31 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 )
 
 type LED struct {
 	*pb.LED
+	ProbeFailCount int
 }
 
 var RegisteredLEDs map[string]*LED
 
 var c = &http.Client{}
 
+var mutex *sync.RWMutex
+
 func Init() {
 	RegisteredLEDs = make(map[string]*LED)
+	mutex = &sync.RWMutex{}
+	time.AfterFunc(60*time.Second, FreshenUp)
 }
 
 func Register(ipAddress string) error {
 	var err error
+	mutex.Lock()
+	defer mutex.Unlock()
 	if _, ok := RegisteredLEDs[ipAddress]; !ok {
 		fmt.Println("Adding", ipAddress)
 		l := &LED{
@@ -39,6 +48,7 @@ func Register(ipAddress string) error {
 			}
 		}
 	}
+
 	return err
 }
 
@@ -148,12 +158,49 @@ func (led *LED) Refresh() error {
 }
 
 func Update(l *pb.LED) error {
+	mutex.RLock()
+	defer mutex.RUnlock()
 	var err error
 	if _, ok := RegisteredLEDs[l.GetIpAddress()]; ok {
-		RegisteredLEDs[l.GetIpAddress()].LED = l
-		err = RegisteredLEDs[l.GetIpAddress()].UpdateConfig()
+		if l.GetMdnsName() == RegisteredLEDs[l.GetIpAddress()].GetMdnsName() && l.GetDataPin() == RegisteredLEDs[l.GetIpAddress()].GetDataPin() {
+			RegisteredLEDs[l.GetIpAddress()].LED.Color = l.Color
+			RegisteredLEDs[l.GetIpAddress()].LED.Lights = l.Lights
+			err = RegisteredLEDs[l.GetIpAddress()].UpdateColors()
+			if err == nil {
+				err = RegisteredLEDs[l.GetIpAddress()].UpdateLights()
+			}
+		} else {
+			RegisteredLEDs[l.GetIpAddress()].LED = l
+			err = RegisteredLEDs[l.GetIpAddress()].UpdateConfig()
+		}
+
 	}
 	return err
+}
+
+func FreshenUp() {
+	var err error
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	for k, led := range RegisteredLEDs {
+		err = led.Probe()
+		if err == nil {
+			err = led.Refresh()
+		}
+
+		if err != nil {
+			led.ProbeFailCount++
+			if led.ProbeFailCount > 3 {
+				delete(RegisteredLEDs, k)
+			}
+		} else {
+			led.ProbeFailCount = 0
+		}
+
+	}
+
+	time.AfterFunc(60*time.Second, FreshenUp)
 }
 
 func JSONToLED(j string, l *LED) error {
