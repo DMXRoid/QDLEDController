@@ -46,6 +46,24 @@ message UpdateLEDsResponse {
 	ResponseMetadata metadata = 1;
 }
 
+message RegisterLEDRequest {
+	RequestMetadata metadata = 1;
+	LED led = 2;
+}
+
+message RegisterLEDResponse {
+	ResponseMetadata metadata = 1;
+}
+
+message SyncLEDsRequest {
+	RequestMetadata metadata = 1;
+	string sourceIdentifier = 2;
+	string targetIdentifier = 3;
+}
+
+message SyncLEDsResponse {
+	ResponseMetadata metadata = 1;
+}
 
 service LEDController {
 	rpc GetLEDs(GetLEDsRequest) returns (GetLEDsResponse) {
@@ -59,6 +77,20 @@ service LEDController {
 			post: "/update-leds"
 			body: "*"
 		};
+	}
+
+	rpc RegisterLED(RegisterLEDRequest) returns (RegisterLEDResponse) {
+		option (google.api.http) = {
+			post: "/register-led"
+			body: "*"
+		};
+	}
+
+	rpc SyncLEDs(SyncLEDsRequest) returns (SyncLEDsResponse) {
+		option (google.api.http) = {
+			post: "/sync-led"
+			body: "*"
+		};	
 	}
 }
 	

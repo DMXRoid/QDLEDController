@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type LEDControllerClient interface {
 	GetLEDs(ctx context.Context, in *GetLEDsRequest, opts ...grpc.CallOption) (*GetLEDsResponse, error)
 	UpdateLEDs(ctx context.Context, in *UpdateLEDsRequest, opts ...grpc.CallOption) (*UpdateLEDsResponse, error)
+	RegisterLED(ctx context.Context, in *RegisterLEDRequest, opts ...grpc.CallOption) (*RegisterLEDResponse, error)
+	SyncLEDs(ctx context.Context, in *SyncLEDsRequest, opts ...grpc.CallOption) (*SyncLEDsResponse, error)
 }
 
 type lEDControllerClient struct {
@@ -52,12 +54,32 @@ func (c *lEDControllerClient) UpdateLEDs(ctx context.Context, in *UpdateLEDsRequ
 	return out, nil
 }
 
+func (c *lEDControllerClient) RegisterLED(ctx context.Context, in *RegisterLEDRequest, opts ...grpc.CallOption) (*RegisterLEDResponse, error) {
+	out := new(RegisterLEDResponse)
+	err := c.cc.Invoke(ctx, "/LEDController/RegisterLED", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lEDControllerClient) SyncLEDs(ctx context.Context, in *SyncLEDsRequest, opts ...grpc.CallOption) (*SyncLEDsResponse, error) {
+	out := new(SyncLEDsResponse)
+	err := c.cc.Invoke(ctx, "/LEDController/SyncLEDs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LEDControllerServer is the server API for LEDController service.
 // All implementations must embed UnimplementedLEDControllerServer
 // for forward compatibility
 type LEDControllerServer interface {
 	GetLEDs(context.Context, *GetLEDsRequest) (*GetLEDsResponse, error)
 	UpdateLEDs(context.Context, *UpdateLEDsRequest) (*UpdateLEDsResponse, error)
+	RegisterLED(context.Context, *RegisterLEDRequest) (*RegisterLEDResponse, error)
+	SyncLEDs(context.Context, *SyncLEDsRequest) (*SyncLEDsResponse, error)
 	mustEmbedUnimplementedLEDControllerServer()
 }
 
@@ -70,6 +92,12 @@ func (UnimplementedLEDControllerServer) GetLEDs(context.Context, *GetLEDsRequest
 }
 func (UnimplementedLEDControllerServer) UpdateLEDs(context.Context, *UpdateLEDsRequest) (*UpdateLEDsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLEDs not implemented")
+}
+func (UnimplementedLEDControllerServer) RegisterLED(context.Context, *RegisterLEDRequest) (*RegisterLEDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterLED not implemented")
+}
+func (UnimplementedLEDControllerServer) SyncLEDs(context.Context, *SyncLEDsRequest) (*SyncLEDsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SyncLEDs not implemented")
 }
 func (UnimplementedLEDControllerServer) mustEmbedUnimplementedLEDControllerServer() {}
 
@@ -120,6 +148,42 @@ func _LEDController_UpdateLEDs_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LEDController_RegisterLED_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterLEDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LEDControllerServer).RegisterLED(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LEDController/RegisterLED",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LEDControllerServer).RegisterLED(ctx, req.(*RegisterLEDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LEDController_SyncLEDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SyncLEDsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LEDControllerServer).SyncLEDs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LEDController/SyncLEDs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LEDControllerServer).SyncLEDs(ctx, req.(*SyncLEDsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LEDController_ServiceDesc is the grpc.ServiceDesc for LEDController service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +198,14 @@ var LEDController_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateLEDs",
 			Handler:    _LEDController_UpdateLEDs_Handler,
+		},
+		{
+			MethodName: "RegisterLED",
+			Handler:    _LEDController_RegisterLED_Handler,
+		},
+		{
+			MethodName: "SyncLEDs",
+			Handler:    _LEDController_SyncLEDs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

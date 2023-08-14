@@ -23,7 +23,10 @@ var c = &http.Client{}
 
 var mutex *sync.RWMutex
 
+var failedProbes chan string
+
 func Init() {
+	failedProbes = make(chan string, 20)
 	RegisteredLEDs = make(map[string]*LED)
 	mutex = &sync.RWMutex{}
 	time.AfterFunc(60*time.Second, FreshenUp)
@@ -178,13 +181,56 @@ func Update(l *pb.LED) error {
 	return err
 }
 
+func SelfRegister(l *pb.LED) error {
+	var err error
+	mutex.Lock()
+	defer mutex.Unlock()
+	if _, ok := RegisteredLEDs[l.GetIpAddress()]; !ok {
+		RegisteredLEDs[l.GetIpAddress()] = &LED{
+			LED: l,
+		}
+	}
+	return err
+}
+
+func Sync(sourceIdentifier, targetIdentifier string) error {
+	var err error
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if s, ok := RegisteredLEDs[sourceIdentifier]; ok {
+		if t, ok := RegisteredLEDs[targetIdentifier]; ok {
+			t.Color = s.Color
+			t.Lights = s.Lights
+			t.UpdateColors()
+			t.UpdateLights()
+		} else {
+			err = fmt.Errorf(fmt.Sprintf("Unregistered target: %s", targetIdentifier))
+		}
+
+	} else {
+		err = fmt.Errorf(fmt.Sprintf("Unregistered source: %s", sourceIdentifier))
+	}
+
+	return err
+
+}
+
 func FreshenUp() {
 	var err error
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	for k, led := range RegisteredLEDs {
-		err = led.Probe()
+		go func() {
+			var err error
+			err = led.Probe()
+			if err != nil {
+				failedProbes <- led.GetIpAddress()
+			} else {
+				err = led.Refresh()
+			}
+		}()
 		if err == nil {
 			err = led.Refresh()
 		}
@@ -201,10 +247,4 @@ func FreshenUp() {
 	}
 
 	time.AfterFunc(60*time.Second, FreshenUp)
-}
-
-func JSONToLED(j string, l *LED) error {
-	var err error
-
-	return err
 }

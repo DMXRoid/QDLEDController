@@ -79,3 +79,19 @@ func (s *ledControllerServer) UpdateLEDs(ctx context.Context, req *pb.UpdateLEDs
 
 	return resp, err
 }
+
+func (s *ledControllerServer) RegisterLED(ctx context.Context, req *pb.RegisterLEDRequest) (*pb.RegisterLEDResponse, error) {
+	var err error
+	resp := &pb.RegisterLEDResponse{Metadata: &pb.ResponseMetadata{Code: 200}}
+	err = led.SelfRegister(req.Led)
+
+	return resp, err
+}
+
+func (s *ledControllerServer) SyncLEDs(ctx context.Context, req *pb.SyncLEDsRequest) (*pb.SyncLEDsResponse, error) {
+	var err error
+	resp := &pb.SyncLEDsResponse{Metadata: &pb.ResponseMetadata{Code: 200}}
+	err = led.Sync(req.GetSourceIdentifier(), req.GetTargetIdentifier())
+
+	return resp, err
+}

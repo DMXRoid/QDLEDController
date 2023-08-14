@@ -19,50 +19,52 @@ function getLEDs() {
 
 function populateLED(led) {
 	var ledTemplate = $("#templates .light-display").clone(true, true);
-	$(ledTemplate).find(".friendly-name").html(led["friendlyName"]);
-	$(ledTemplate).find(".mdns-name").first().html(led["mdnsName"]);
-	$(ledTemplate).find(".ip-address").html(led["ipAddress"]);
-	$(ledTemplate).find(".mac-address").first().html(led["macAddress"]);
-	var id = led["ipAddress"].replaceAll(".","-");
-	$(ledTemplate).attr("id", id);
-	
-	for(var x = 0; x < led["color"]["colors"].length; x++) {
-		var c = led["color"]["colors"][x].replace("0x","");
-		$(ledTemplate).find(".colors").first().append($(`<div class="col" style="background-color: #${c};"></div>`));
-		var colorEditTemplate = $("#templates .color-input-display").clone(true, true);
-		colorEditTemplate.find(".color-input").first().val("#" + c);
-		colorEditTemplate.find(".color-input").first().spectrum({
-			preferredFormat: "hex",
-			showInput: true,
-			showInitial: true,
-		});
-		$(ledTemplate).find(".color-editor").first().append(colorEditTemplate);
+	if(led["color"] && led["lights"]) {
+		$(ledTemplate).find(".friendly-name").html(led["friendlyName"]);
+		$(ledTemplate).find(".mdns-name").first().html(led["mdnsName"]);
+		$(ledTemplate).find(".ip-address").html(led["ipAddress"]);
+		$(ledTemplate).find(".mac-address").first().html(led["macAddress"]);
+		var id = led["ipAddress"].replaceAll(".","-");
+		$(ledTemplate).attr("id", id);
+		
+		for(var x = 0; x < led["color"]["colors"].length; x++) {
+			var c = led["color"]["colors"][x].replace("0x","");
+			$(ledTemplate).find(".colors").first().append($(`<div class="col" style="background-color: #${c};"></div>`));
+			var colorEditTemplate = $("#templates .color-input-display").clone(true, true);
+			colorEditTemplate.find(".color-input").first().val("#" + c);
+			colorEditTemplate.find(".color-input").first().spectrum({
+				preferredFormat: "hex",
+				showInput: true,
+				showInitial: true,
+			});
+			$(ledTemplate).find(".color-editor").first().append(colorEditTemplate);
+		}
+
+		edit = $(ledTemplate).find(".edit").first();
+		$(edit).attr("id", "edit-" + id);
+		
+
+
+		$(edit).find(".friendlyName").val(led["friendlyName"]);
+		$(edit).find(".mdnsName").val(led["mdnsName"]);
+		$(edit).find(".fadeDelay").val(led["color"]["fadeDelay"]);
+		$(edit).find(".stepDelay").val(led["color"]["stepDelay"]);
+
+		$(edit).find(".brightness").first().val(led["lights"]["brightness"]);
+		$(edit).find(".count").first().val(led["lights"]["count"]);
+		$(edit).find(".mode").val(led["color"]["mode"]);
+		if(led["color"]["isGradient"]) {
+			$(edit).find(".isGradient").prop("checked", true);
+		}
+		if(led["lights"]["isEnabled"]) {
+			$(edit).find(".isEnabled").prop("checked", true);
+		}
+
+		ledTemplate.show();
+		$(ledTemplate).data("og-data", led);
+		
+		$("#light-container").append(ledTemplate);
 	}
-
-	edit = $(ledTemplate).find(".edit").first();
-	$(edit).attr("id", "edit-" + id);
-	
-
-
-	$(edit).find(".friendlyName").val(led["friendlyName"]);
-	$(edit).find(".mdnsName").val(led["mdnsName"]);
-	$(edit).find(".fadeDelay").val(led["color"]["fadeDelay"]);
-	$(edit).find(".stepDelay").val(led["color"]["stepDelay"]);
-
-	$(edit).find(".brightness").first().val(led["lights"]["brightness"]);
-	$(edit).find(".count").first().val(led["lights"]["count"]);
-	$(edit).find(".mode").val(led["color"]["mode"]);
-	if(led["color"]["isGradient"]) {
-		$(edit).find(".isGradient").prop("checked", true);
-	}
-	if(led["lights"]["isEnabled"]) {
-		$(edit).find(".isEnabled").prop("checked", true);
-	}
-
-	ledTemplate.show();
-	$(ledTemplate).data("og-data", led);
-	
-	$("#light-container").append(ledTemplate);
 }
 
 $(function() {
