@@ -6,6 +6,7 @@
 		<link href="styles.css" rel="stylesheet">
 
 		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/jquery-3.7.0.min.js" integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
 		<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
@@ -16,11 +17,99 @@
 
 	</head>
 	<body>
-		<div class="container-xxl" id="main-container">
+		<div class="container-lg" id="main-container">
 			<div class="row"><div class="col"><h1>QDLEDController</h1></div></div>
+			<div class="row align-items-center bg-secondary rounded header-tools">
+				<div class="col-1 form-check"><input type="checkbox" class="meta-check form-check-input" value=""/></div>
+				<div class="col-2"><a href="#" class="btn-primary btn" id="mass-edit-button">Edit</a></div>
+				<div class="col-2"><a href="#" class="btn btn-warning" id="sync-button">Sync</a></div>
+			</div>
 			<div class="row" class="" id="light-container"></div>
+			<div class="modal sync" id="sync" tabindex="-1" >
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								Sync
+							</h5>
+							<button type="button" class="btn-close sync-close-button"></button>
+						</div>
+						<div class="modal-body">
+							<div>
+								<select id="sync-source" class="form-select" name="sync-source"></select>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary sync-close-button">Close</button>
+							<button type="button" class="btn btn-primary sync-lights">Save</button>
+						</div>
+					</div>
+				</div>
+			</div>	
+			<div class="modal mass-edit" id="mass-edit" tabindex="-1" >
+				<form class="mass-edit-form">
+				<div class="modal-dialog modal-dialog-centered">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">
+								Mass Edit
+							</h5>
+							<button type="button" class="btn-close mass-edit-close-button"></button>
+						</div>
+						<div class="modal-body">
+							
+								<div class="container-fluid">
+									<div class="row">
+										<div class="col-4">
+											<label class="form-label">Fade Delay</label>
+											<input type="text" class="form-control fadeDelay" name="fadeDelay"/>
+										</div>
+										<div class="col-4">
+											<label class="form-label">Step Delay</label>
+											<input type="text" class="form-control stepDelay" name="stepDelay"/>
+										</div>
+										<div class="col-4">
+											<label class="form-label">Mode</label>
+											<select name="mode" class="form-select mode">
+												<option value="COLOR_MODE_STATIC">Static</option>
+												<option value="COLOR_MODE_STEP">Step</option>
+												<option value="COLOR_MODE_FADE">Fade</option>
+												<option value="COLOR_MODE_REVERSING_STEP">Reverse</option>
+											</select>
+										</div>
+										<div class="col-4">
+											<label class="form-label">Brightness</label>
+											<input type="text" class="form-control brightness" name="brightness"/>
+										</div>
+										<div class="col-4">
+											<div class="form-check">
+												<label class="form-check-label">Gradient</label>
+												<input type="checkbox" value="true" class="form-check-input isGradient" name="isGradient"/>
+											</div>
+											<div class="form-check">
+												<label class="form-check-label">Enabled</label>
+												<input type="checkbox" value="true" class="form-check-input isEnabled" name="isEnabled"/>
+											</div>
+											
+										</div>
+									</div>
+									<div class="row">
+										<div class="col color-editor">
+											<h1>Colors <a href="#" class="btn btn-primary color-add">+</a></h1>
 
-
+										</div>
+									</div>
+								</div>
+				
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary mass-edit-close-button">Close</button>
+							<button type="button" class="btn btn-primary mass-update-light">Save</button>
+						</div>
+					</div>
+				</form>
+				</div>
+			</div>
 		</div>
 		<div style="display: none;" id="templates">
 			<div class="color-input-display">
@@ -30,25 +119,25 @@
 							<input type="text" name="colors[]" class="color-input" value=""/>
 						</div>
 						<div class="col-3 align-items-right">
-							
 							<a href="#" class="btn btn-danger color-remove">-</a>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="light-display shadow rounded col-2">
+			<div class="light-display clearfix shadow rounded">
 				<div class="container">
-					<div class="row colors position-relative">
-						<div class="light-label bg-white bg-opacity-75 text-center align-items-center z-3 position-absolute top-50 start-50 translate-middle">
-							<a href="#" class="edit-button">
-								<span class="friendly-name"></span>
-								<br>
-								(<span class="ip-address"></span>)
-							</a>
-						</div>
+					<div class="row light-info align-items-center">
+						<div class="col-1 form-check"><input type="checkbox" name="mass_update[]" class="mass-update-check form-check-input" value=""/></div>
+						<div class="col-2 bg-white bg-opacity-50 rounded friendly-name"></div>
+						<div class="col-1"></div>
+						<div class="col-2 bg-white bg-opacity-50 rounded ip-address"></div>
+						<div class="col-4"></div>
+						<div class="col-1 align-self-right"><a href="#" class="edit-button bi bi-pencil-square align-self-end"></a></div>
+						<div class="col-1 form-check form-switch align-self-right"><input class="form-check-input align-self-end light-toggle" type="checkbox" role="switch"></div>
 					</div>
-					<div class="modal edit" tabindex="-1" > 
-						<form>
+					
+					<div class="modal edit" tabindex="-1" >
+						<form class="edit-form">
 						<div class="modal-dialog modal-dialog-centered">
 							<div class="modal-content">
 								<div class="modal-header">

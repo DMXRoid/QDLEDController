@@ -1,14 +1,17 @@
 package led
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/DMXRoid/QDLEDController/v2/db"
 	pb "github.com/DMXRoid/QDLEDController/v2/proto"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	pbjson "google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -17,27 +20,18 @@ type LED struct {
 	ProbeFailCount int
 }
 
-var RegisteredLEDs map[string]*LED
+type LEDs map[string]*LED
 
 var c = &http.Client{}
 
-var mutex *sync.RWMutex
-
-var failedProbes chan string
-
 func Init() {
-	failedProbes = make(chan string, 20)
-	RegisteredLEDs = make(map[string]*LED)
-	mutex = &sync.RWMutex{}
-	time.AfterFunc(60*time.Second, FreshenUp)
+	time.AfterFunc(300*time.Second, FreshenUp)
 }
 
 func Register(ipAddress string) error {
 	var err error
-	mutex.Lock()
-	defer mutex.Unlock()
-	if _, ok := RegisteredLEDs[ipAddress]; !ok {
-		fmt.Println("Adding", ipAddress)
+
+	if _, err := GetLED(ipAddress); err != nil {
 		l := &LED{
 			LED: &pb.LED{
 				IpAddress: ipAddress,
@@ -47,11 +41,41 @@ func Register(ipAddress string) error {
 		if err == nil {
 			err = l.Refresh()
 			if err == nil {
-				RegisteredLEDs[ipAddress] = l
+				err = l.Save()
 			}
 		}
+	} else {
+		err = nil
 	}
 
+	return err
+}
+
+func (led *LED) Save() error {
+	var err error
+	c := db.GetCollection("led")
+	f := bson.D{{
+		"led.ipaddress",
+		led.GetIpAddress(),
+	}}
+	_, err = c.ReplaceOne(context.TODO(), f, led, options.Replace().SetUpsert(true))
+	if err != nil {
+		fmt.Println(fmt.Sprintf(":::SAVE ERROR::: %s", err))
+	}
+	return err
+}
+
+func (led *LED) Delete() error {
+	var err error
+	c := db.GetCollection("led")
+	f := bson.D{{
+		"led.ipaddress",
+		led.GetIpAddress(),
+	}}
+	_, err = c.DeleteOne(context.TODO(), f)
+	if err != nil {
+		fmt.Println(fmt.Sprintf(":::SAVE ERROR::: %s", err))
+	}
 	return err
 }
 
@@ -73,11 +97,14 @@ func (led *LED) Update(configType string, p []byte) error {
 	var err error
 
 	payload := fmt.Sprintf("{\"action\": \"set-%s\", \"%s\": %s}", configType, configType, p)
+	fmt.Println(fmt.Sprintf("updating %s", led.LED.GetIpAddress()))
+	fmt.Println(":::::::UPDATING:::::::")
 	fmt.Println(payload)
 	_, err = c.Post(led.GetActionURL(), "application/json", strings.NewReader(payload))
 	if err != nil {
 		fmt.Println("error:::", err)
 	}
+	led.Save()
 	return err
 }
 
@@ -111,6 +138,11 @@ func (led *LED) UpdateLights() error {
 		err = led.Update("light-config", j)
 	}
 	return err
+}
+
+func (led *LED) Toggle() error {
+	led.LED.Lights.IsEnabled = !led.LED.Lights.IsEnabled
+	return led.UpdateLights()
 }
 
 func (led *LED) Probe() error {
@@ -151,7 +183,8 @@ func (led *LED) Refresh() error {
 				if err != nil {
 					fmt.Println("error:", err)
 				} else {
-					fmt.Println(fmt.Sprintf("%+v", led.LED))
+					err = led.Save()
+					//fmt.Println(fmt.Sprintf("%+v", led.LED))
 				}
 			}
 		}
@@ -160,21 +193,47 @@ func (led *LED) Refresh() error {
 	return err
 }
 
-func Update(l *pb.LED) error {
-	mutex.RLock()
-	defer mutex.RUnlock()
+func GetLED(ipAddress string) (*LED, error) {
+	var led *LED
 	var err error
-	if _, ok := RegisteredLEDs[l.GetIpAddress()]; ok {
-		if l.GetMdnsName() == RegisteredLEDs[l.GetIpAddress()].GetMdnsName() && l.GetDataPin() == RegisteredLEDs[l.GetIpAddress()].GetDataPin() {
-			RegisteredLEDs[l.GetIpAddress()].LED.Color = l.Color
-			RegisteredLEDs[l.GetIpAddress()].LED.Lights = l.Lights
-			err = RegisteredLEDs[l.GetIpAddress()].UpdateColors()
+	led = &LED{}
+	err = db.GetCollection("led").FindOne(context.TODO(), bson.D{{"led.ipaddress", ipAddress}}).Decode(led)
+	return led, err
+}
+
+func GetAllLEDs() ([]*LED, error) {
+	var leds []*LED
+	var err error
+	//opts := options.Find().SetSort(bson.D{{"led.friendlyName", 1}})
+	opts := bson.D{}
+	c, err := db.GetCollection("led").Find(context.TODO(), opts)
+	if err == nil {
+		err = c.All(context.TODO(), &leds)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return leds, err
+}
+
+func Update(l *pb.LED) error {
+	var led *LED
+	var err error
+	led, err = GetLED(l.GetIpAddress())
+	if err == nil {
+		if l.GetMdnsName() == led.GetMdnsName() && l.GetDataPin() == led.GetDataPin() {
+			led.LED.Color = l.Color
+			led.LED.Lights = l.Lights
+			err = led.UpdateColors()
 			if err == nil {
-				err = RegisteredLEDs[l.GetIpAddress()].UpdateLights()
+				err = led.UpdateLights()
 			}
 		} else {
-			RegisteredLEDs[l.GetIpAddress()].LED = l
-			err = RegisteredLEDs[l.GetIpAddress()].UpdateConfig()
+
+			fmt.Println(fmt.Sprintf("Full config change for %+v", l))
+			led.LED = l
+			err = led.UpdateConfig()
 		}
 
 	}
@@ -183,29 +242,25 @@ func Update(l *pb.LED) error {
 
 func SelfRegister(l *pb.LED) error {
 	var err error
-	mutex.Lock()
-	defer mutex.Unlock()
-	if _, ok := RegisteredLEDs[l.GetIpAddress()]; !ok {
-		RegisteredLEDs[l.GetIpAddress()] = &LED{
-			LED: l,
-		}
-	}
+	err = Register(l.GetIpAddress())
 	return err
 }
 
-func Sync(sourceIdentifier, targetIdentifier string) error {
+func Sync(sourceIdentifier string, targetIdentifier []string) error {
 	var err error
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	if s, ok := RegisteredLEDs[sourceIdentifier]; ok {
-		if t, ok := RegisteredLEDs[targetIdentifier]; ok {
-			t.Color = s.Color
-			t.Lights = s.Lights
-			t.UpdateColors()
-			t.UpdateLights()
-		} else {
-			err = fmt.Errorf(fmt.Sprintf("Unregistered target: %s", targetIdentifier))
+	fmt.Println("SYNCING STARTS")
+	fmt.Println(fmt.Sprintf("%+v", targetIdentifier))
+	if s, err := GetLED(sourceIdentifier); err == nil {
+		for _, tid := range targetIdentifier {
+			if t, err := GetLED(tid); err == nil {
+				t.Color = s.Color
+				t.Lights = s.Lights
+				t.UpdateColors()
+				t.UpdateLights()
+				fmt.Printf(fmt.Sprintf("syncing %s to %s", sourceIdentifier, tid))
+			} else {
+				err = fmt.Errorf(fmt.Sprintf("Unregistered target: %s", tid))
+			}
 		}
 
 	} else {
@@ -216,35 +271,36 @@ func Sync(sourceIdentifier, targetIdentifier string) error {
 
 }
 
+func Toggle(ipAddress string) error {
+	var err error
+	var l *LED
+
+	l, err = GetLED(ipAddress)
+	if err == nil {
+		err = l.Toggle()
+	}
+	return err
+}
+
 func FreshenUp() {
 	var err error
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	for k, led := range RegisteredLEDs {
-		go func() {
-			var err error
-			err = led.Probe()
+	var leds []*LED
+	leds, err = GetAllLEDs()
+	if err == nil {
+		for _, l := range leds {
+			err = l.Probe()
 			if err != nil {
-				failedProbes <- led.GetIpAddress()
+				l.ProbeFailCount++
+				if l.ProbeFailCount >= 3 {
+					l.Delete()
+				} else {
+					l.Save()
+				}
 			} else {
-				err = led.Refresh()
+				l.ProbeFailCount = 0
+				l.Save()
 			}
-		}()
-		if err == nil {
-			err = led.Refresh()
 		}
-
-		if err != nil {
-			led.ProbeFailCount++
-			if led.ProbeFailCount > 3 {
-				delete(RegisteredLEDs, k)
-			}
-		} else {
-			led.ProbeFailCount = 0
-		}
-
 	}
-
-	time.AfterFunc(60*time.Second, FreshenUp)
+	time.AfterFunc(300*time.Second, FreshenUp)
 }

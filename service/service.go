@@ -61,9 +61,13 @@ func Init() {
 
 func (s *ledControllerServer) GetLEDs(ctx context.Context, req *pb.GetLEDsRequest) (*pb.GetLEDsResponse, error) {
 	var err error
-	leds := make([]*pb.LED, 0, len(led.RegisteredLEDs))
-	for _, l := range led.RegisteredLEDs {
-		leds = append(leds, l.LED)
+	var leds []*pb.LED
+	a, err := led.GetAllLEDs()
+	if err == nil {
+		leds = make([]*pb.LED, 0, len(a))
+		for _, l := range a {
+			leds = append(leds, l.LED)
+		}
 	}
 	resp := &pb.GetLEDsResponse{Metadata: &pb.ResponseMetadata{Code: 200}, Leds: leds}
 
@@ -92,6 +96,15 @@ func (s *ledControllerServer) SyncLEDs(ctx context.Context, req *pb.SyncLEDsRequ
 	var err error
 	resp := &pb.SyncLEDsResponse{Metadata: &pb.ResponseMetadata{Code: 200}}
 	err = led.Sync(req.GetSourceIdentifier(), req.GetTargetIdentifier())
+
+	return resp, err
+}
+
+func (s *ledControllerServer) ToggleLED(ctx context.Context, req *pb.ToggleLEDRequest) (*pb.ToggleLEDResponse, error) {
+	var err error
+	fmt.Println(":::::IN TOGGLE::::")
+	resp := &pb.ToggleLEDResponse{Metadata: &pb.ResponseMetadata{Code: 200}}
+	err = led.Toggle(req.GetIpAddress())
 
 	return resp, err
 }

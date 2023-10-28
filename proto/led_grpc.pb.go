@@ -26,6 +26,7 @@ type LEDControllerClient interface {
 	UpdateLEDs(ctx context.Context, in *UpdateLEDsRequest, opts ...grpc.CallOption) (*UpdateLEDsResponse, error)
 	RegisterLED(ctx context.Context, in *RegisterLEDRequest, opts ...grpc.CallOption) (*RegisterLEDResponse, error)
 	SyncLEDs(ctx context.Context, in *SyncLEDsRequest, opts ...grpc.CallOption) (*SyncLEDsResponse, error)
+	ToggleLED(ctx context.Context, in *ToggleLEDRequest, opts ...grpc.CallOption) (*ToggleLEDResponse, error)
 }
 
 type lEDControllerClient struct {
@@ -72,6 +73,15 @@ func (c *lEDControllerClient) SyncLEDs(ctx context.Context, in *SyncLEDsRequest,
 	return out, nil
 }
 
+func (c *lEDControllerClient) ToggleLED(ctx context.Context, in *ToggleLEDRequest, opts ...grpc.CallOption) (*ToggleLEDResponse, error) {
+	out := new(ToggleLEDResponse)
+	err := c.cc.Invoke(ctx, "/LEDController/ToggleLED", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LEDControllerServer is the server API for LEDController service.
 // All implementations must embed UnimplementedLEDControllerServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type LEDControllerServer interface {
 	UpdateLEDs(context.Context, *UpdateLEDsRequest) (*UpdateLEDsResponse, error)
 	RegisterLED(context.Context, *RegisterLEDRequest) (*RegisterLEDResponse, error)
 	SyncLEDs(context.Context, *SyncLEDsRequest) (*SyncLEDsResponse, error)
+	ToggleLED(context.Context, *ToggleLEDRequest) (*ToggleLEDResponse, error)
 	mustEmbedUnimplementedLEDControllerServer()
 }
 
@@ -98,6 +109,9 @@ func (UnimplementedLEDControllerServer) RegisterLED(context.Context, *RegisterLE
 }
 func (UnimplementedLEDControllerServer) SyncLEDs(context.Context, *SyncLEDsRequest) (*SyncLEDsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncLEDs not implemented")
+}
+func (UnimplementedLEDControllerServer) ToggleLED(context.Context, *ToggleLEDRequest) (*ToggleLEDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleLED not implemented")
 }
 func (UnimplementedLEDControllerServer) mustEmbedUnimplementedLEDControllerServer() {}
 
@@ -184,6 +198,24 @@ func _LEDController_SyncLEDs_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LEDController_ToggleLED_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ToggleLEDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LEDControllerServer).ToggleLED(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/LEDController/ToggleLED",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LEDControllerServer).ToggleLED(ctx, req.(*ToggleLEDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // LEDController_ServiceDesc is the grpc.ServiceDesc for LEDController service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +238,10 @@ var LEDController_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SyncLEDs",
 			Handler:    _LEDController_SyncLEDs_Handler,
+		},
+		{
+			MethodName: "ToggleLED",
+			Handler:    _LEDController_ToggleLED_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

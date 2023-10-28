@@ -4,10 +4,14 @@ body {
 }
 
 .colors {
-	min-height: 100px;
+	height: 50px;
+	margin-top: 5px;
 }
 
+.clear { display: block; clear: both; }
+.light-bg-color { border-right: 1px solid #000; height: 50px; }
+.light-display { margin-top: 8px; }
+.light-info { height: 40px; }
+.edit-button { color: #fff; }
 
-.light-display {  }
-.light-display .light-label {   }
-.edit-button { display: block; width: 100%; text-decoration: none; color: #000; min-height: 70px;}
+.header-tools { padding: 4px 12px; }

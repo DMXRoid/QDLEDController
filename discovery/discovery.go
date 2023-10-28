@@ -10,7 +10,7 @@ import (
 var mdnsResults chan *mdns.ServiceEntry
 
 func Init() {
-	mdnsResults = make(chan *mdns.ServiceEntry, 20)
+	mdnsResults = make(chan *mdns.ServiceEntry, 50)
 	go func() {
 		for entry := range mdnsResults {
 			err := led.Register(entry.AddrV4.String())

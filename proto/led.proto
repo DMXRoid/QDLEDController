@@ -58,12 +58,43 @@ message RegisterLEDResponse {
 message SyncLEDsRequest {
 	RequestMetadata metadata = 1;
 	string sourceIdentifier = 2;
-	string targetIdentifier = 3;
+	repeated string targetIdentifier = 3;
 }
 
 message SyncLEDsResponse {
 	ResponseMetadata metadata = 1;
 }
+
+
+message ToggleLEDRequest {
+	RequestMetadata metadata = 1;
+	string ip_address = 2;
+}
+
+message ToggleLEDResponse {
+	ResponseMetadata metadata = 1;
+}
+
+message CreateGroupRequest {
+	RequestMetadata metadata = 1;
+	string name = 2;
+}
+
+message CreateGroupResponse {
+	ResponseMetadata metadata = 1;
+	Group group = 2;
+}
+
+message AddLEDsToGroupRequest {
+	RequestMetadata metadata = 1;
+	string group_id = 2;
+	repeated string leds = 3;
+}
+
+message AddLEDsToGroupResponse {
+	ResponseMetadata metadata = 1;
+}
+
 
 service LEDController {
 	rpc GetLEDs(GetLEDsRequest) returns (GetLEDsResponse) {
@@ -89,6 +120,27 @@ service LEDController {
 	rpc SyncLEDs(SyncLEDsRequest) returns (SyncLEDsResponse) {
 		option (google.api.http) = {
 			post: "/sync-led"
+			body: "*"
+		};	
+	}
+
+	rpc ToggleLED(ToggleLEDRequest) returns (ToggleLEDResponse) {
+		option (google.api.http) = {
+			post: "/toggle-led"
+			body: "*"
+		};	
+	}
+
+	rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse) {
+		option (google.api.http) = {
+			post: "/create-group"
+			body: "*"
+		};	
+	}
+
+	rpc AddLEDsToGroup(AddLEDsToGroupRequest) returns (AddLEDsToGroupResponse) {
+		option (google.api.http) = {
+			post: "/add-leds-to-group"
 			body: "*"
 		};	
 	}
@@ -126,4 +178,9 @@ message LightConfig {
 	int32 end_time = 3;
 	bool is_enabled = 4;
 	int32 brightness = 5;
+}
+
+message Group {
+	string id = 1;
+	string name = 2;
 }
